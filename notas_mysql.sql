@@ -36,6 +36,9 @@ UPDATE usuarios
 SET edad = 25
 WHERE id = '1'
 
+--eleminar una columna de una tabla
+alter table individuos drop column rol
+
 --creacion de una clave foranea
 
 CREATE TABLE publicaciones (
@@ -45,6 +48,12 @@ CREATE TABLE publicaciones (
     PRIMARY KEY (id),
     FOREIGN KEY (autor_id) REFERENCES usuarios(id) --usuarios es la tabla
 )
+
+-- si queremos añadir una columna como llave foranea que relacione otra tabla a traves de la id
+
+alter table miembros
+add column oficios int,
+add foreign key (oficios) references roles (oficio_id)
 
 
 --varios elementos
@@ -63,6 +72,12 @@ SELECT Price,Price*2 AS precio_doble FROM Products
 --si queremos order los precios de forma ascendente o descendente
 ORDER BY Price ASC -- DESC
 
+-- Muestra el número de filas de la tabla departments.
+SELECT COUNT(*) FROM departments;
+
+-- Selecciona los valores de los títulos de la tabla titles, pero no muestra
+-- duplicados.
+SELECT DISTINCT title FROM titles;
 
 --JERARQUIA
 
@@ -70,6 +85,30 @@ ORDER BY Price ASC -- DESC
 --2) valores de cadena - de caracteres se ordenan lexicograficamente
 --3) valores nulos
 --4) otros tipos de datos: fechas, valores booleanos y otros.
+
+
+--EJERCICIO crear dos tablas donde se relacionen a traves de una llave foranea
+
+create table miembros (
+	id int(11) auto_increment,
+    nombre varchar(50) not null,
+    apellido varchar(50) not null,
+    edad int(11) not null,
+    oficio int(11),
+    foreign key (oficio) references roles(oficio_id), -- esto se agrega luego de crear la segunda tabla
+    primary key (id)
+);
+
+--como modificamos esa columna
+alter table miembros ADD CONSTRAINT oficio FOREIGN KEY (oficio) REFERENCES roles(oficio_id);
+
+create table roles (
+	oficio_id int(11) auto_increment,
+    trabajo varchar(50) not null,
+    tiempo varchar(50) not null,
+    primary key (oficio_id)
+)
+
 
 
 
@@ -226,6 +265,13 @@ SELECT SupplierID, ROUND(AVG(Price)) AS promedio FROM Products
 GROUP BY SupplierID
 HAVING promedio > 40
 
+--si queremos elegir dos filas de un inner join, para que funcione:
+
+select p.ProductID, SUM(Quantity) from products p
+inner join orderdetails o on p.ProductID = o.ProductID
+where p.ProductID = 11 or p.ProductID = 12
+group by p.ProductID
+
 
 --EJERCICIO 2
 SELECT ProductID, SUM(Quantity) AS total FROM OrderDetails
@@ -238,12 +284,18 @@ LIMIT 1
 SELECT... FROM...
 WHERE...
 GROUP BY...
-HAVING...
+HAVING...  -- si utilizamos group by no podemos usar where, hay que usar HAVING
 ORDER BY...
 LIMIT...
 
 --¡IMPORTANTE! NO PODEMOS AGREGAR UNA FUNCION DE AGREGACION DENTRO DE OTRA FUNCION DE AGREGACION
 MAX(SUM(PRECIO))  --ESTO NO SE PUEDE HACER PERO SI CON SUBCONSULTAS
+
+--como solucionamos esto:
+
+select max(sumatoria) as max_sumatoria from (select p.ProductID, sum(Quantity) as sumatoria from products p  --importante el max_sumatoria y subquery
+inner join orderdetails o on p.ProductID = o.ProductID
+group by p.ProductID) as subquery
 
 --otra forma de cambiarle el nombre es:
 FROM OrderDetails as OD
@@ -274,7 +326,10 @@ select * from curso.publicaciones where autor_id IN (
     select id from curso.usuarios where nombre like 'L%'
 )
 
+--otra subconsulta: la subconsulta mas comun por que es la misma tabla nada mas que se le aplica dos funciones a la misma columna
 
+select max(sumatoria) as sumatoria_max from (select ProductID,SUM(Price) as sumatoria from products
+group by ProductID) as consulta_1
 
 
 --JOINS - PARA COMBINAR LA INFORMACION DE DOS BASES DE DATOS O MAS, PERO QUE LA INFORAMCION SE DEVUELVA EN UNA SOLA TABLA
@@ -321,6 +376,23 @@ SELECT FirstName FROM employees where FirstName like 'A%'
 SELECT FirstName FROM employees where FirstName like 'J%' or FirstName like 'A%'
 
 
+-- si queremos que nos se repitan los datos ponemos:
+SELECT FirstName,Recompesa,Mes FROM Employees e
+LEFT JOIN Recompensas r ON e.EmployeeID = r.EmpleadoID
+
+UNION DISTINCT
+
+SELECT FirstName,Recompesa,Mes FROM Employees e
+RIGHT JOIN Recompensas r ON e.EmployeeID = r.EmpleadoID
+
+
+--esto esta mal:
+
+select * from products p
+inner join orderdetails o on p.ProductID = o.ProductID
+where ProductID = 11
+
+--
 
 
 
@@ -360,6 +432,8 @@ SELECT * FROM productos_simplificados
 DROP VIEW IF EXISTS productos_simplificados  --verifica si existe para no tirar errores
 
 DROP VIEW productos_simplificados  --elimina sin preguntar pero tira error si es que existe
+
+
 
 
 
